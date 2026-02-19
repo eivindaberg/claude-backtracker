@@ -191,24 +191,35 @@ export interface EntryTimingReport {
 	topFomoBuys: EntryTimingItem[]; // biggest run-ups before purchase
 }
 
+export interface PostSellWindow {
+	days: number;
+	pctChange: number | null; // null if price data unavailable for this window
+	estimatedNOK: number; // gain/loss in NOK based on sellAmountNOK
+}
+
 export interface PostSellItem {
 	instrument: string;
 	isin: string;
 	sellDate: Date;
 	sellPrice: number;
-	currentPrice: number;
-	pctChangeSinceSell: number;
-	missedGainOrDodgedLossNOK: number;
-	classification: 'missed-gain' | 'dodged-loss' | 'neutral';
 	sellAmountNOK: number;
+	windows: PostSellWindow[]; // 30d, 90d, 365d
+}
+
+export interface PostSellWindowSummary {
+	days: number;
+	label: string; // "30 days", "3 months", "1 year"
+	avgPctChange: number;
+	pctWouldHaveGained: number; // % of sells where holding longer would have been better
+	totalMissedNOK: number; // sum of positive outcomes
+	totalDodgedNOK: number; // sum of negative outcomes (absolute)
+	itemCount: number; // how many sells have data for this window
 }
 
 export interface PostSellReport {
 	items: PostSellItem[];
-	pctSoldTooEarly: number;
-	totalMissedGainsNOK: number;
-	totalDodgedLossesNOK: number;
-	biggestMissedOpportunities: PostSellItem[];
+	windowSummaries: PostSellWindowSummary[];
+	biggestMissedOpportunities: (PostSellItem & { windowPct: number; windowDays: number })[]; // best 90d missed gains
 }
 
 export interface TradingRule {

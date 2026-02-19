@@ -35,9 +35,10 @@ export interface AnonymizedStats {
 	pctBoughtAfterRunup?: number;
 	pctBoughtDuringDip?: number;
 
-	// Post-sell (if available)
-	pctSoldTooEarly?: number;
-	totalMissedGainsVsDodgedLosses?: string;
+	// Post-sell (if available) — what happened if they had held longer
+	postSell30d?: { avgPctChange: number; pctRose: number };
+	postSell90d?: { avgPctChange: number; pctRose: number };
+	postSell1y?: { avgPctChange: number; pctRose: number };
 }
 
 export function anonymize(
@@ -81,13 +82,12 @@ export function anonymize(
 	}
 
 	if (postSell) {
-		stats.pctSoldTooEarly = postSell.pctSoldTooEarly;
-		if (postSell.totalMissedGainsNOK > 0 || postSell.totalDodgedLossesNOK > 0) {
-			const ratio =
-				postSell.totalDodgedLossesNOK > 0
-					? postSell.totalMissedGainsNOK / postSell.totalDodgedLossesNOK
-					: Infinity;
-			stats.totalMissedGainsVsDodgedLosses = `Missed gains are ${ratio === Infinity ? 'much' : ratio.toFixed(1) + 'x'} larger than dodged losses`;
+		for (const summary of postSell.windowSummaries) {
+			if (summary.itemCount === 0) continue;
+			const data = { avgPctChange: Math.round(summary.avgPctChange * 10) / 10, pctRose: Math.round(summary.pctWouldHaveGained) };
+			if (summary.days === 30) stats.postSell30d = data;
+			else if (summary.days === 90) stats.postSell90d = data;
+			else if (summary.days === 365) stats.postSell1y = data;
 		}
 	}
 
