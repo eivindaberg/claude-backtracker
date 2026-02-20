@@ -222,6 +222,44 @@ export interface PostSellReport {
 	biggestMissedOpportunities: (PostSellItem & { windowPct: number; windowDays: number })[]; // best 90d missed gains
 }
 
+// --- Averaging Down ---
+
+export interface AveragingDownSequence {
+	instrument: string;
+	isin: string;
+	buys: { date: Date; price: number; quantity: number }[];
+	priceDrop: number; // % drop from first to last buy in the sequence
+	outcome: 'sold-at-loss' | 'sold-at-profit' | 'open';
+	profitNOK?: number;
+}
+
+export interface AveragingDownReport {
+	sequences: AveragingDownSequence[];
+	totalInstances: number;
+	pctEndedInLoss: number;
+	avgPriceDropPct: number;
+}
+
+// --- Break-Even Anchoring ---
+
+export interface AnchoringReport {
+	sellsNearBreakEven: number; // within ±3% of avg buy price
+	totalSells: number;
+	pctNearBreakEven: number;
+	severity: 'none' | 'mild' | 'strong';
+	examples: { instrument: string; pctFromBreakEven: number; holdDays: number }[];
+}
+
+// --- Conviction (sizing enhancement) ---
+
+export interface ConvictionVerdict {
+	bigBetsAvgReturn: number;
+	smallBetsAvgReturn: number;
+	bigBetsWinRate: number;
+	smallBetsWinRate: number;
+	verdict: 'big-bets-outperform' | 'big-bets-underperform' | 'similar';
+}
+
 export interface TradingRule {
 	number: number;
 	title: string;
@@ -237,5 +275,8 @@ export interface CoachingResponse {
 export interface ExtendedAnalysisReport extends AnalysisReport {
 	entryTiming?: EntryTimingReport;
 	postSell?: PostSellReport;
+	averagingDown?: AveragingDownReport;
+	anchoring?: AnchoringReport;
+	conviction?: ConvictionVerdict;
 	coaching?: CoachingResponse;
 }

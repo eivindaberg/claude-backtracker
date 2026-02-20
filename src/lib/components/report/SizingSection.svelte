@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Card, Badge } from '$lib/components/ui';
 	import { formatCurrency, formatPercent, formatNumber } from '$lib/utils';
-	import type { SizingAnalysis } from '$lib/types';
+	import type { SizingAnalysis, ConvictionVerdict } from '$lib/types';
 
-	let { sizing }: { sizing: SizingAnalysis } = $props();
+	let { sizing, conviction }: { sizing: SizingAnalysis; conviction?: ConvictionVerdict } = $props();
 
 	const consistencyVariant = {
 		consistent: 'profit' as const,
@@ -86,6 +86,38 @@
 					{/each}
 				</tbody>
 			</table>
+		</div>
+	{/if}
+
+	{#if conviction}
+		<div class="mt-6 rounded-lg border border-slate-100 p-4">
+			<h3 class="mb-2 text-sm font-semibold text-slate-700">Conviction vs Outcome</h3>
+			<p class="mb-3 text-xs text-slate-400">Do your biggest bets outperform your smallest?</p>
+			<div class="grid grid-cols-2 gap-4">
+				<div>
+					<p class="text-xs font-medium text-slate-500">Biggest bets (top 25%)</p>
+					<p class="text-lg font-bold {conviction.bigBetsAvgReturn >= 0 ? 'text-profit' : 'text-loss'}">
+						{formatPercent(conviction.bigBetsAvgReturn)} avg
+					</p>
+					<p class="text-xs text-slate-400">{formatNumber(conviction.bigBetsWinRate, 0)}% win rate</p>
+				</div>
+				<div>
+					<p class="text-xs font-medium text-slate-500">Smallest bets (bottom 25%)</p>
+					<p class="text-lg font-bold {conviction.smallBetsAvgReturn >= 0 ? 'text-profit' : 'text-loss'}">
+						{formatPercent(conviction.smallBetsAvgReturn)} avg
+					</p>
+					<p class="text-xs text-slate-400">{formatNumber(conviction.smallBetsWinRate, 0)}% win rate</p>
+				</div>
+			</div>
+			<div class="mt-3">
+				{#if conviction.verdict === 'big-bets-underperform'}
+					<Badge variant="loss">You size up on the wrong trades</Badge>
+				{:else if conviction.verdict === 'big-bets-outperform'}
+					<Badge variant="profit">Good conviction — big bets pay off</Badge>
+				{:else}
+					<Badge>No clear pattern</Badge>
+				{/if}
+			</div>
 		</div>
 	{/if}
 </Card>

@@ -6,6 +6,9 @@
 		ExtendedAnalysisReport,
 		EntryTimingReport,
 		PostSellReport,
+		AveragingDownReport,
+		AnchoringReport,
+		ConvictionVerdict,
 		CoachingResponse
 	} from '$lib/types';
 	import { analyzeAll } from '$lib/analysis/engine';
@@ -13,6 +16,9 @@
 	import { fetchPriceData } from '$lib/api/prices';
 	import { analyzeEntryTiming } from '$lib/analysis/entry-timing';
 	import { analyzePostSell } from '$lib/analysis/post-sell';
+	import { analyzeAveragingDown } from '$lib/analysis/averaging-down';
+	import { analyzeAnchoring } from '$lib/analysis/anchoring';
+	import { analyzeConviction } from '$lib/analysis/conviction';
 	import { fetchCoaching } from '$lib/api/coaching';
 	import { Button } from '$lib/components/ui';
 	import FileUpload from '$lib/components/FileUpload.svelte';
@@ -27,6 +33,8 @@
 	import CoachingPlaceholder from '$lib/components/report/CoachingPlaceholder.svelte';
 	import EntryTimingSection from '$lib/components/report/EntryTimingSection.svelte';
 	import PostSellSection from '$lib/components/report/PostSellSection.svelte';
+	import AveragingDownSection from '$lib/components/report/AveragingDownSection.svelte';
+	import AnchoringSection from '$lib/components/report/AnchoringSection.svelte';
 	import CoachingSection from '$lib/components/report/CoachingSection.svelte';
 
 	type PageView = 'upload' | 'mapping' | 'processing' | 'report';
@@ -68,6 +76,11 @@
 			await tick();
 			const baseReport = analyzeAll(trades);
 
+			// Behavioral analyses (client-side, no price data needed)
+			const averagingDown = analyzeAveragingDown(trades, baseReport.roundTrips);
+			const anchoring = analyzeAnchoring(baseReport.roundTrips);
+			const conviction = analyzeConviction(baseReport.roundTrips);
+
 			// Step 2: Fetch price data from Yahoo Finance
 			processingStep = 'Fetching market data...';
 			await tick();
@@ -99,7 +112,7 @@
 			let coaching: CoachingResponse | undefined;
 
 			try {
-				coaching = await fetchCoaching(baseReport, entryTiming, postSell);
+				coaching = await fetchCoaching(baseReport, entryTiming, postSell, averagingDown, anchoring, conviction);
 			} catch (err) {
 				console.error('Coaching generation failed:', err);
 				toast.error('AI coaching unavailable — showing analysis without coaching');
@@ -109,6 +122,9 @@
 				...baseReport,
 				entryTiming,
 				postSell,
+				averagingDown,
+				anchoring,
+				conviction,
 				coaching
 			};
 
@@ -204,7 +220,7 @@
 				<TimingSection timing={report.timing} />
 			</div>
 
-			<SizingSection sizing={report.sizing} />
+			<SizingSection sizing={report.sizing} conviction={report.conviction} />
 
 			{#if report.entryTiming}
 				<div class="grid gap-6 lg:grid-cols-2">
@@ -215,6 +231,17 @@
 				</div>
 			{:else if report.postSell}
 				<PostSellSection postSell={report.postSell} />
+			{/if}
+
+			{#if report.averagingDown && report.averagingDown.totalInstances > 0}
+				<div class="grid gap-6 lg:grid-cols-2">
+					<AveragingDownSection averagingDown={report.averagingDown} />
+					{#if report.anchoring}
+						<AnchoringSection anchoring={report.anchoring} />
+					{/if}
+				</div>
+			{:else if report.anchoring}
+				<AnchoringSection anchoring={report.anchoring} />
 			{/if}
 
 			<PerStockSection perStock={report.perStock} />

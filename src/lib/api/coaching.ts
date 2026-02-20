@@ -2,6 +2,9 @@ import type {
 	AnalysisReport,
 	EntryTimingReport,
 	PostSellReport,
+	AveragingDownReport,
+	AnchoringReport,
+	ConvictionVerdict,
 	CoachingResponse
 } from '$lib/types';
 import { anonymize } from './anonymizer';
@@ -9,9 +12,12 @@ import { anonymize } from './anonymizer';
 export async function fetchCoaching(
 	report: AnalysisReport,
 	entryTiming?: EntryTimingReport,
-	postSell?: PostSellReport
+	postSell?: PostSellReport,
+	averagingDown?: AveragingDownReport,
+	anchoring?: AnchoringReport,
+	conviction?: ConvictionVerdict
 ): Promise<CoachingResponse> {
-	const stats = anonymize(report, entryTiming, postSell);
+	const stats = anonymize(report, entryTiming, postSell, averagingDown, anchoring, conviction);
 
 	const response = await fetch('/api/analyze', {
 		method: 'POST',
