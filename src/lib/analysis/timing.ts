@@ -49,7 +49,7 @@ export function analyzeTiming(trades: ParsedTrade[], roundTrips: RoundTrip[]): T
 		count: dayCounts.get(day) || 0
 	}));
 
-	// Revenge trades: buy within 2 days of a losing sell
+	// Revenge trades: re-buying the SAME stock within 7 days of a losing sell
 	const losingSells = roundTrips
 		.filter((rt) => rt.profitNOK < 0)
 		.sort((a, b) => a.sellDate.getTime() - b.sellDate.getTime());
@@ -62,7 +62,7 @@ export function analyzeTiming(trades: ParsedTrade[], roundTrips: RoundTrip[]): T
 	for (const loss of losingSells) {
 		for (const buy of buys) {
 			const gap = daysBetween(loss.sellDate, buy.tradeDate);
-			if (gap >= 0 && gap <= 2 && buy.isin !== loss.isin) {
+			if (gap >= 0 && gap <= 7 && buy.isin === loss.isin) {
 				revengeTrades.push({
 					lossTrade: loss,
 					followUpBuy: buy,

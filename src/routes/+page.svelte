@@ -244,7 +244,7 @@
 				<AnchoringSection anchoring={report.anchoring} />
 			{/if}
 
-			<PerStockSection perStock={report.perStock} />
+			<PerStockSection perStock={report.perStock} excludeIsins={tickerMappings.filter(m => m.isNorwegianFund).map(m => m.isin)} />
 			<TradeListTable roundTrips={report.roundTrips} />
 
 			{#if report.coaching}

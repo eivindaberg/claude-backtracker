@@ -3,12 +3,15 @@
 	import { formatCurrency, formatPercent, formatDays, formatNumber } from '$lib/utils';
 	import type { PerStockAnalysis } from '$lib/types';
 
-	let { perStock }: { perStock: PerStockAnalysis[] } = $props();
+	let { perStock, excludeIsins = [] }: { perStock: PerStockAnalysis[]; excludeIsins?: string[] } = $props();
 
-	// Blacklist: stocks with 2+ losing round trips
+	let excludeSet = $derived(new Set(excludeIsins));
+	let filtered = $derived(perStock.filter((s) => !excludeSet.has(s.isin)));
+
+	// Blacklist: stocks with 2+ losing round trips AND net negative P&L
 	let blacklist = $derived(
-		perStock
-			.filter((s) => s.losses >= 2)
+		filtered
+			.filter((s) => s.losses >= 2 && s.totalProfitNOK < 0)
 			.sort((a, b) => a.totalProfitNOK - b.totalProfitNOK)
 	);
 
@@ -17,7 +20,7 @@
 	let sortAsc = $state(false);
 
 	let sorted = $derived(() => {
-		const data = [...perStock];
+		const data = [...filtered];
 		data.sort((a, b) => {
 			const diff = a[sortKey] - b[sortKey];
 			return sortAsc ? diff : -diff;
