@@ -29,30 +29,33 @@ export function analyzeSizing(roundTrips: RoundTrip[]): SizingAnalysis {
 	const top3 = sortedSizes.slice(0, 3).reduce((a, b) => a + b, 0);
 	const concentrationTop3Percent = totalInvested > 0 ? (top3 / totalInvested) * 100 : 0;
 
-	// Size vs outcome by quartile
-	const sortedBySizeWithRT = roundTrips
-		.map((rt) => ({ rt, size: rt.buyAmountNOK }))
-		.sort((a, b) => a.size - b.size);
+	// Size vs outcome by natural NOK size ranges
+	const sizeBuckets = [
+		{ label: 'Under 5K', min: 0, max: 5000 },
+		{ label: '5K–10K', min: 5000, max: 10000 },
+		{ label: '10K–25K', min: 10000, max: 25000 },
+		{ label: '25K–50K', min: 25000, max: 50000 },
+		{ label: '50K–100K', min: 50000, max: 100000 },
+		{ label: '100K+', min: 100000, max: Infinity }
+	];
 
-	const quartileSize = Math.ceil(sortedBySizeWithRT.length / 4);
-	const quartileLabels = ['Small', 'Medium', 'Large', 'Very Large'];
 	const sizeVsOutcome: SizeVsOutcome[] = [];
 
-	for (let i = 0; i < 4; i++) {
-		const start = i * quartileSize;
-		const end = Math.min(start + quartileSize, sortedBySizeWithRT.length);
-		const quartile = sortedBySizeWithRT.slice(start, end);
+	for (const bucket of sizeBuckets) {
+		const inBucket = roundTrips.filter(
+			(rt) => rt.buyAmountNOK >= bucket.min && rt.buyAmountNOK < bucket.max
+		);
 
-		if (quartile.length === 0) continue;
+		if (inBucket.length === 0) continue;
 
-		const returns = quartile.map((q) => q.rt.profitPercent);
-		const wins = quartile.filter((q) => q.rt.profitNOK > 0).length;
+		const returns = inBucket.map((rt) => rt.profitPercent);
+		const wins = inBucket.filter((rt) => rt.profitNOK > 0).length;
 
 		sizeVsOutcome.push({
-			sizeQuartile: quartileLabels[i],
+			sizeQuartile: bucket.label,
 			avgReturnPercent: returns.reduce((a, b) => a + b, 0) / returns.length,
-			count: quartile.length,
-			winRate: (wins / quartile.length) * 100
+			count: inBucket.length,
+			winRate: (wins / inBucket.length) * 100
 		});
 	}
 

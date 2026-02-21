@@ -83,23 +83,29 @@
 
 	<!-- Revenge trades -->
 	{#if timing.revengeTradeCount > 0}
+		{@const totalRevengeLoss = timing.revengeTrades.reduce((sum, r) => sum + r.lossTrade.profitNOK, 0)}
 		<div class="border-t border-slate-100 pt-4">
 			<div class="mb-2 flex items-center gap-2">
 				<h3 class="text-sm font-medium text-slate-700">Revenge Trades</h3>
 				<Badge variant="warning">{timing.revengeTradeCount} detected</Badge>
 			</div>
 			<p class="mb-3 text-xs text-slate-500">
-				Buying a different stock within 2 days of closing a losing position.
+				Re-buying the same stock within 7 days of closing it at a loss.
 			</p>
+			<div class="mb-3 rounded-lg bg-loss-bg p-3 text-center">
+				<div class="text-lg font-bold text-loss">{formatCurrency(totalRevengeLoss)}</div>
+				<div class="text-xs text-slate-500">lost on the trades that triggered revenge buys</div>
+			</div>
 			<div class="space-y-2">
 				{#each timing.revengeTrades.slice(0, 5) as revenge}
-					<div class="text-sm">
-						<span class="text-loss">Lost on {revenge.lossTrade.instrument}</span>
-						<span class="text-slate-400"> → bought </span>
-						<span class="text-slate-600">{revenge.followUpBuy.instrument}</span>
-						<span class="text-slate-400">
-							{revenge.daysBetween === 0 ? 'same day' : `${revenge.daysBetween}d later`}
-						</span>
+					<div class="flex items-center justify-between text-sm">
+						<div>
+							<span class="text-loss">Lost on {revenge.lossTrade.instrument}</span>
+							<span class="text-slate-400">
+								→ rebought {revenge.daysBetween === 0 ? 'same day' : `${revenge.daysBetween}d later`}
+							</span>
+						</div>
+						<span class="font-medium text-loss">{formatCurrency(revenge.lossTrade.profitNOK)}</span>
 					</div>
 				{/each}
 				{#if timing.revengeTradeCount > 5}
