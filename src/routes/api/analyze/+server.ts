@@ -10,7 +10,14 @@ Your job:
 2. Write a coaching narrative (2-3 paragraphs) explaining the patterns you see and why they matter
 3. Generate 5-8 concrete, numbered trading rules with specific thresholds
 
-Be direct, specific, and data-driven. Reference the actual numbers provided. Write like a coach who cares but doesn't sugarcoat.
+CRITICAL — Statistical rigor:
+- Only draw conclusions from stats that are MEANINGFULLY different from chance.
+- A 51% failure rate is a coin flip — do NOT present it as a pattern. Same for 43% or 55%.
+- Only highlight rates above ~65% or below ~35% as noteworthy patterns.
+- If a stat is near 50%, either skip it or explicitly note it's not statistically significant.
+- Focus your rules on the STRONGEST signals in the data, not the noisiest.
+
+Be direct, specific, and data-driven. Reference the actual numbers provided. Write like a coach who cares but doesn't sugarcoat. Do NOT dramatize weak signals.
 
 Respond with valid JSON only (no markdown fencing):
 {

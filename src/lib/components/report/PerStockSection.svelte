@@ -5,6 +5,13 @@
 
 	let { perStock }: { perStock: PerStockAnalysis[] } = $props();
 
+	// Blacklist: stocks with 2+ losing round trips
+	let blacklist = $derived(
+		perStock
+			.filter((s) => s.losses >= 2)
+			.sort((a, b) => a.totalProfitNOK - b.totalProfitNOK)
+	);
+
 	type SortKey = 'roundTrips' | 'totalProfitNOK' | 'winRate' | 'avgHoldDays';
 	let sortKey: SortKey = $state('roundTrips');
 	let sortAsc = $state(false);
@@ -39,6 +46,34 @@
 		return sortAsc ? ' \u2191' : ' \u2193';
 	}
 </script>
+
+{#if blacklist.length > 0}
+	<Card class="border-red-200 bg-red-50/30">
+		<div class="mb-4 flex items-center justify-between">
+			<h2 class="text-lg font-semibold text-slate-900">Blacklist</h2>
+			<Badge variant="loss">{blacklist.length} stocks</Badge>
+		</div>
+		<p class="mb-4 text-sm text-slate-500">
+			Stocks where you've lost money on 2 or more separate round trips. You've proven you can't read these correctly.
+		</p>
+		<div class="space-y-2">
+			{#each blacklist as stock}
+				<div class="flex items-center justify-between rounded-lg border border-red-100 bg-white px-3 py-2">
+					<div>
+						<span class="font-medium text-slate-900">{stock.instrument}</span>
+						<span class="ml-2 text-xs text-slate-400">
+							{stock.losses} losses out of {stock.roundTrips} trades
+						</span>
+					</div>
+					<div class="flex items-center gap-3">
+						<span class="text-sm font-medium text-loss">{formatCurrency(stock.totalProfitNOK)}</span>
+						<span class="text-xs text-slate-400">{formatNumber(stock.winRate, 0)}% win rate</span>
+					</div>
+				</div>
+			{/each}
+		</div>
+	</Card>
+{/if}
 
 <Card>
 	<h2 class="mb-4 text-lg font-semibold text-slate-900">Per-Stock Analysis</h2>
